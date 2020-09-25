@@ -7,3 +7,7 @@ This parser generates the metadata records for each report in the COVID-19 LST g
 Note that reports in the drive prior to September 12, 2020 were checked for naming issues and manually corrected and stored in the data folder of this repository.  As a result, the parser will only pull files posted to the google drive after September 11th.
 
 Additionally, this parser uses the PyDrive2 library to leverage the googledrive API. Sufficient credentials (credentials.json) will be needed in order to make it work.
+
+Note that the jupyter notebook contains more detailed comments and serves as the documentation for this code. If it causes issues with running the code withing the BioThings ecosystem, delete the 'documentation' folder before running.
+
+Note that the COVID-19 LST provides 2 types of data: Their reports (which are deserving of their own entries as review articles) and their annotations (to be appended to publication entries).  This repo is for the reports, which are updated almost daily (weekends are less steady). 
