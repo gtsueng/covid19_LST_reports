@@ -9,7 +9,7 @@ import biothings.hub.dataload.dumper
 
 class LSTDumper(biothings.hub.dataload.dumper.DummyDumper):
 
-    SRC_NAME = "covid19_LST_parser"
+    SRC_NAME = "covid19_LST_reports"
     __metadata__ = {
         "src_meta": {
             "author":{
@@ -18,7 +18,7 @@ class LSTDumper(biothings.hub.dataload.dumper.DummyDumper):
             },
             "code":{
                 "branch": "main",
-                "repo": "https://github.com/gtsueng/covid19_LST_parser.git"
+                "repo": "https://github.com/gtsueng/covid19_LST_reports.git"
             },
             "url": "https://www.covid19lst.org/",
             "license": "http://creativecommons.org/licenses/by-nc-sa/4.0/"

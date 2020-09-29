@@ -11,15 +11,15 @@ MAP_VARS = ["@type", "abstract", "author", "isBasedOn", "curatedBy", "datePublis
 
 # when code is exported, import becomes relative
 try:
-    from covid19_LST_parser.parser import load_annotations as parser_func
+    from covid19_LST_reports.parser import load_annotations as parser_func
 except ImportError:
     from .parser import load_annotations as parser_func
 
 
 class LSTUploader(biothings.hub.dataload.uploader.BaseSourceUploader):
 
-    main_source="covid19_LST_parser"
-    name = "covid19_LST_parser"
+    main_source="covid19_LST_reports"
+    name = "covid19_LST_reports"
     __metadata__ = {
         "src_meta": {
             "author":{
@@ -28,7 +28,7 @@ class LSTUploader(biothings.hub.dataload.uploader.BaseSourceUploader):
             },
             "code":{
                 "branch": "master",
-                "repo": "https://github.com/gtsueng/covid19_LST_parser.git"
+                "repo": "https://github.com/gtsueng/covid19_LST_reports.git"
             },
             "url": "https://www.covid19lst.org/",
             "license": "https://creativecommons.org/licenses/by-nc-sa/4.0/"
