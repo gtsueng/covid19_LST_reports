@@ -12,7 +12,7 @@ import requests
 def generate_curator():
     todate = datetime.now()
     curatedByObject = {"@type": "Organization", "identifier": "covid19LST", "url": "https://www.covid19lst.org/", 
-                              "name": "COVID-19 Literature Surveillance Team", "affiliation": "", 
+                              "name": "COVID-19 Literature Surveillance Team", "affiliation": [], 
                               "curationDate": todate.strftime("%Y-%m-%d")}
     return(curatedByObject)
 
