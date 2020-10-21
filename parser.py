@@ -8,6 +8,11 @@ import sys
 import PyPDF2 as pypdf
 import requests
 
+PLUGIN_PATH  = '/data/biothings_studio/plugins/covid19_LST_reports/'
+RESULTS_PATH = os.path.join(PLUGIN_PATH, 'results/')
+DATA_PATH    = os.path.join(PLUGIN_PATH, 'data/')
+REPORTS_PATH = os.path.join(DATA_PATH, 'reports/')
+
 #### Create curatedBy Object
 def generate_curator():
     todate = datetime.now()
@@ -20,7 +25,7 @@ def generate_curator():
 def generate_author():
     authorObject = generate_curator()
     authorObject.pop('curationDate')
-    memberlist = read_csv('data/LST members.txt',delimiter='\t',header=0,encoding='UTF-8')
+    memberlist = read_csv(os.path.join(DATA_PATH, 'LST members.txt'),delimiter='\t',header=0,encoding='UTF-8')
     memberlist.rename(columns={'affiliation':'affiliation list'}, inplace=True)
     memberlist['affiliation']='blank'
     for i in range(len(memberlist)):
@@ -72,7 +77,7 @@ def get_pmid_meta(pmidlist):
 
 
 def parse_pdf(eachfile):
-    pdffile = open('data/reports/'+eachfile,'rb')
+    pdffile = open(REPORTS_PATH+eachfile,'rb')
     pdf = pypdf.PdfFileReader(pdffile)
     pages = pdf.getNumPages()
     key = '/Annots'
@@ -108,6 +113,7 @@ def parse_pdf(eachfile):
     return(pmidlist,doilist)
 
 def merge_meta(pmidlist,doilist):
+    basedOndf, missing = None, None
     if len(doilist)>0:
         doianns,missing_dois = convert_dois(doilist)
         doicheck = True
@@ -138,15 +144,17 @@ def merge_meta(pmidlist,doilist):
 
 
 def save_missing(missing):
-    try:
-        missing_list = pickle.load(open('results/pubs_not_yet_in_outbreak.txt','rb'))
+    not_yet_file = 'pubs_not_yet_in_outbreak.p'
+    if os.path.isfile(not_yet_file):
+        missing_list = pickle.load(open(os.path.join(RESULTS_PATH, not_yet_file),'rb'))
         if missing != None:
             total_missing = list(set([*missing_list, *missing]))
-            with open('results/pubs_not_yet_in_outbreak.txt','wb') as dmpfile:
+            with open(os.path.join(RESULTS_PATH, not_yet_file),'wb') as dmpfile:
                 pickle.dump(total_missing,dmpfile)
-    except:
+    else:
         if missing != None:
-            with open('results/pubs_not_yet_in_outbreak.txt','wb') as dmpfile:
+            total_missing = list(set(missing))
+            with open(os.path.join(RESULTS_PATH, not_yet_file),'wb') as dmpfile:
                 pickle.dump(total_missing,dmpfile)
 
         
@@ -171,7 +179,7 @@ def generate_report_meta(filelist):
     author = generate_author()
     for eachfile in filelist:
         reportdate = eachfile[0:4]+'.'+eachfile[4:6]+'.'+eachfile[6:8]
-        datePublished = datetime.fromisoformat(eachfile[0:4]+'-'+eachfile[4:6]+'-'+eachfile[6:8])
+        datePublished = datetime(int(eachfile[0:4]), int(eachfile[4:6]), int(eachfile[6:8]))
         name = "Covid-19 LST Report "+reportdate
         reporturl = generate_report_url(datePublished)
         report_id = 'lst'+reportdate
@@ -183,7 +191,7 @@ def generate_report_meta(filelist):
         reportlinkdf['name']=name
         report_pmid_df = pandas.concat(([report_pmid_df,reportlinkdf]),ignore_index=True)
         report_pmid_df.drop_duplicates(keep='first',inplace=True)
-        report_pmid_df.to_csv('data/report_pmid_df.txt',sep='\t',header=True)
+        report_pmid_df.to_csv(os.path.join(DATA_PATH, 'report_pmid_df.txt'),sep='\t',header=True)
         save_missing(missing)
         abstract = generate_abstract(basedOndf['_id'].unique().tolist())
         metadict = {"@context": {"schema": "http://schema.org/", "outbreak": "https://discovery.biothings.io/view/outbreak/"}, 
@@ -204,7 +212,8 @@ def check_google():
     
     gauth = GoogleAuth()
     scope = ['https://www.googleapis.com/auth/drive']
-    gauth.credentials = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+    cred_path = os.path.join(DATA_PATH, 'credentials.json')
+    gauth.credentials = ServiceAccountCredentials.from_json_keyfile_name(cred_path, scope)
     drive = GoogleDrive(gauth)
     file_id = '1603ahBNdt1SnSaYYBE-G8SA6qgRTQ6fF'
     file_list = drive.ListFile({'q': "'%s' in parents and trashed=false" % file_id}).GetList()
@@ -215,7 +224,7 @@ def check_google():
     lastupdate = dfclean.loc[dfclean['createdDate']=='2020-09-11T01:53:29.639Z'].iloc[0]['date']
     dfnew = dfclean.loc[dfclean['date']>lastupdate]
     
-    all_files = os.listdir('data/reports/')
+    all_files = os.listdir(REPORTS_PATH)
     new_files = [item  for item in all_files if item not in dfnew['title'].unique().tolist()]
     reportdf = dfnew.loc[dfnew['title'].isin(new_files)]
     return(reportdf)
@@ -228,19 +237,14 @@ def download_reports(reportdf):
         title = reportdf.iloc[i]['title']
         eachid = reportdf.iloc[i]['id']
         gdd.download_file_from_google_drive(file_id=eachid,
-                                            dest_path='data/reports/'+title,
+                                            dest_path=REPORTS_PATH+title,
                                             unzip=False)    
         
 
 def load_annotations():
     reportdf = check_google()
     download_reports(reportdf)
-    dumpdir = 'data/reports/'
+    dumpdir = REPORTS_PATH
     filelist = os.listdir(dumpdir)
     metadict = generate_report_meta(filelist)
     yield from(metadict)
-    
-
-
-
-
