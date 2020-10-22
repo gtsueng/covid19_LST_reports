@@ -101,7 +101,8 @@ def parse_pdf(eachfile):
                 tmpid = 'pmid'+pmid
             pmidlist.append(tmpid)
         elif 'doi' in eachurl:
-            doi = eachurl.replace("https://doi.org/","").rstrip("/")
+            tenplace = eachurl.find('10.')
+            doi = eachurl(tenplace:)
             doilist.append(doi)
         pmidlist = list(set(pmidlist))
         doilist = list(set(doilist))
@@ -147,7 +148,7 @@ def save_missing(missing):
     except:
         if missing != None:
             with open('results/pubs_not_yet_in_outbreak.txt','wb') as dmpfile:
-                pickle.dump(total_missing,dmpfile)
+                pickle.dump(missing,dmpfile)
 
         
 ## Note that strftime("%d") will give the day with a leading zero
