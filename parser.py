@@ -8,10 +8,14 @@ import sys
 import PyPDF2 as pypdf
 import requests
 
+from biothings import config
+logger = config.logger
+
 PLUGIN_PATH  = '/data/biothings_studio/plugins/covid19_LST_reports/'
-RESULTS_PATH = os.path.join(PLUGIN_PATH, 'results/')
-DATA_PATH    = os.path.join(PLUGIN_PATH, 'data/')
-REPORTS_PATH = os.path.join(DATA_PATH, 'reports/')
+DATA_PREFIX  = '/home/biothings/lstdata'
+RESULTS_PATH = os.path.join(DATA_PREFIX, 'results/')
+DATA_PATH    = os.path.join(DATA_PREFIX, 'data/')
+REPORTS_PATH = os.path.join(DATA_PATH,   'reports/')
 
 #### Create curatedBy Object
 def generate_curator():
@@ -184,6 +188,7 @@ def generate_report_meta(filelist):
         name = "Covid-19 LST Report "+reportdate
         reporturl = generate_report_url(datePublished)
         report_id = 'lst'+reportdate
+        logger.warning(eachfile)
         pmidlist,doilist = parse_pdf(eachfile)
         try:
             basedOndf,missing = merge_meta(pmidlist,doilist)
@@ -250,5 +255,6 @@ def load_annotations():
     download_reports(reportdf)
     dumpdir = REPORTS_PATH
     filelist = os.listdir(dumpdir)
+    logger.warning(filelist)
     metadict = generate_report_meta(filelist)
     yield from(metadict)
