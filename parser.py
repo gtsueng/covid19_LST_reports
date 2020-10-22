@@ -102,7 +102,7 @@ def parse_pdf(eachfile):
             pmidlist.append(tmpid)
         elif 'doi' in eachurl:
             tenplace = eachurl.find('10.')
-            doi = eachurl(tenplace:)
+            doi = eachurl[tenplace:]
             doilist.append(doi)
         pmidlist = list(set(pmidlist))
         doilist = list(set(doilist))
