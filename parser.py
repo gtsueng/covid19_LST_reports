@@ -177,23 +177,26 @@ def generate_report_meta(filelist):
         reporturl = generate_report_url(datePublished)
         report_id = 'lst'+reportdate
         pmidlist,doilist = parse_pdf(eachfile)
-        basedOndf,missing = merge_meta(pmidlist,doilist)
-        reportlinkdf = basedOndf[['_id','url']]
-        reportlinkdf['identifier']=report_id
-        reportlinkdf['url']=reporturl
-        reportlinkdf['name']=name
-        report_pmid_df = pandas.concat(([report_pmid_df,reportlinkdf]),ignore_index=True)
-        report_pmid_df.drop_duplicates(keep='first',inplace=True)
-        report_pmid_df.to_csv('data/report_pmid_df.txt',sep='\t',header=True)
-        save_missing(missing)
-        abstract = generate_abstract(basedOndf['_id'].unique().tolist())
-        metadict = {"@context": {"schema": "http://schema.org/", "outbreak": "https://discovery.biothings.io/view/outbreak/"}, 
-                    "@type": "Publication", "journalName": "COVID-19 LST Daily Summary Reports", "journalNameAbbreviation": "covid19LST", 
-                    "publicationType": "Review", "license":"(CC BY-NC-SA 4.0) (http://creativecommons.org/licenses/by-nc-sa/4.0/)",
-                    "_id":report_id,"curatedBy": curatedByObject,"abstract": abstract, "name": name, 
-                    "datePublished": datePublished.strftime("%y-%m-%d"),"url": reporturl,"author":[author], 
-                    "isBasedOn":basedOndf.to_dict('records')}
-        yield(metadict)
+        try:
+            basedOndf,missing = merge_meta(pmidlist,doilist)
+            reportlinkdf = basedOndf[['_id','url']]
+            reportlinkdf['identifier']=report_id
+            reportlinkdf['url']=reporturl
+            reportlinkdf['name']=name
+            report_pmid_df = pandas.concat(([report_pmid_df,reportlinkdf]),ignore_index=True)
+            report_pmid_df.drop_duplicates(keep='first',inplace=True)
+            report_pmid_df.to_csv('data/report_pmid_df.txt',sep='\t',header=True)
+            save_missing(missing)
+            abstract = generate_abstract(basedOndf['_id'].unique().tolist())
+            metadict = {"@context": {"schema": "http://schema.org/", "outbreak": "https://discovery.biothings.io/view/outbreak/"}, 
+                        "@type": "Publication", "journalName": "COVID-19 LST Daily Summary Reports", "journalNameAbbreviation": "covid19LST", 
+                        "publicationType": "Review", "license":"(CC BY-NC-SA 4.0) (http://creativecommons.org/licenses/by-nc-sa/4.0/)",
+                        "_id":report_id,"curatedBy": curatedByObject,"abstract": abstract, "name": name, 
+                        "datePublished": datePublished.strftime("%y-%m-%d"),"url": reporturl,"author":[author], 
+                        "isBasedOn":basedOndf.to_dict('records')}
+            yield(metadict)
+        except:
+            save_missing(list(report_id))
         
         
 ## This function identifies files uploaded after 2020.09.11 that have NOT yet been downloaded
