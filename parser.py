@@ -234,7 +234,7 @@ def check_google():
     dfnew = dfclean.loc[dfclean['date']>lastupdate]
     
     all_files = os.listdir(REPORTS_PATH)
-    new_files = [item  for item in all_files if item not in dfnew['title'].unique().tolist()]
+    new_files = [item for item in dfnew['title'].unique().tolist() if item not in all_files]
     reportdf = dfnew.loc[dfnew['title'].isin(new_files)]
     return(reportdf)
 
