@@ -11,8 +11,7 @@ import requests
 from biothings import config
 logger = config.logger
 
-PLUGIN_PATH  = '/data/biothings_studio/plugins/covid19_LST_reports/'
-DATA_PREFIX  = '/home/biothings/lstdata'
+DATA_PREFIX  = '/data/outbreak/plugins/covid_LST_reports'
 RESULTS_PATH = os.path.join(DATA_PREFIX, 'results/')
 DATA_PATH    = os.path.join(DATA_PREFIX, 'data/')
 REPORTS_PATH = os.path.join(DATA_PATH,   'reports/')
