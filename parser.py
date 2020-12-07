@@ -204,7 +204,7 @@ def generate_report_meta(filelist):
                         "@type": "Publication", "journalName": "COVID-19 LST Daily Summary Reports", "journalNameAbbreviation": "covid19LST", 
                         "publicationType": "Review", "license":"(CC BY-NC-SA 4.0) (http://creativecommons.org/licenses/by-nc-sa/4.0/)",
                         "_id":report_id,"curatedBy": curatedByObject,"abstract": abstract, "name": name, 
-                        "datePublished": datePublished.strftime("%y-%m-%d"),"url": reporturl,"author":[author], 
+                        "datePublished": datePublished.strftime("%Y-%m-%d"),"url": reporturl,"author":[author], 
                         "isBasedOn":basedOndf.to_dict('records')}
             yield(metadict)
         except:
