@@ -14,7 +14,7 @@ logger = config.logger
 DATA_PREFIX  = '/data/outbreak/plugins/covid_LST_reports'
 RESULTS_PATH = os.path.join(DATA_PREFIX, 'results/')
 DATA_PATH    = os.path.join(DATA_PREFIX, 'data/')
-REPORTS_PATH = os.path.join(DATA_PATH,   'reports/')
+REPORTS_PATH = os.path.join(DATA_PREFIX, 'reports/')
 
 #### Create curatedBy Object
 def generate_curator():
@@ -28,7 +28,7 @@ def generate_curator():
 def generate_author():
     authorObject = generate_curator()
     authorObject.pop('curationDate')
-    memberlist = read_csv(os.path.join(DATA_PATH, 'LST members.txt'),delimiter='\t',header=0,encoding='UTF-8')
+    memberlist = read_csv(os.path.join(DATA_PREFIX, 'LST members.txt'),delimiter='\t',header=0,encoding='UTF-8')
     memberlist.rename(columns={'affiliation':'affiliation list'}, inplace=True)
     memberlist['affiliation']='blank'
     for i in range(len(memberlist)):
@@ -183,7 +183,12 @@ def generate_report_meta(filelist):
     author = generate_author()
     for eachfile in filelist:
         reportdate = eachfile[0:4]+'.'+eachfile[4:6]+'.'+eachfile[6:8]
-        datePublished = datetime(int(eachfile[0:4]), int(eachfile[4:6]), int(eachfile[6:8]))
+        try:
+            datePublished = datetime(int(eachfile[0:4]), int(eachfile[4:6]), int(eachfile[6:8]))
+        except:
+            logger.warning(f"could not find date published for {eachfile}")
+            continue
+
         name = "Covid-19 LST Report "+reportdate
         reporturl = generate_report_url(datePublished)
         report_id = 'lst'+reportdate
@@ -197,7 +202,7 @@ def generate_report_meta(filelist):
             reportlinkdf['name']=name
             report_pmid_df = pandas.concat(([report_pmid_df,reportlinkdf]),ignore_index=True)
             report_pmid_df.drop_duplicates(keep='first',inplace=True)
-            report_pmid_df.to_csv(os.path.join(DATA_PATH, 'report_pmid_df.txt'),sep='\t',header=True)
+            report_pmid_df.to_csv(os.path.join(DATA_PREFIX, 'report_pmid_df.txt'),sep='\t',header=True)
             save_missing(missing)
             abstract = generate_abstract(basedOndf['_id'].unique().tolist())
             metadict = {"@context": {"schema": "http://schema.org/", "outbreak": "https://discovery.biothings.io/view/outbreak/"}, 
@@ -220,7 +225,7 @@ def check_google():
     
     gauth = GoogleAuth()
     scope = ['https://www.googleapis.com/auth/drive']
-    cred_path = os.path.join(DATA_PATH, 'credentials.json')
+    cred_path = os.path.join(DATA_PREFIX, 'credentials.json')
     gauth.credentials = ServiceAccountCredentials.from_json_keyfile_name(cred_path, scope)
     drive = GoogleDrive(gauth)
     file_id = '1603ahBNdt1SnSaYYBE-G8SA6qgRTQ6fF'
