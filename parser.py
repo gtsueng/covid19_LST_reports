@@ -241,12 +241,17 @@ def check_google():
 ## This is the function to actually conduct the download
 def download_reports(reportdf):
     from google_drive_downloader import GoogleDriveDownloader as gdd
+    notdownloaded = 0
     for i in range(len(reportdf)):
         title = reportdf.iloc[i]['title']
         eachid = reportdf.iloc[i]['id']
-        gdd.download_file_from_google_drive(file_id=eachid,
-                                            dest_path=REPORTS_PATH+title,
-                                            unzip=False)    
+        try:
+            date_title = int(title[0:6])
+            gdd.download_file_from_google_drive(file_id=eachid,
+                                                dest_path='data/reports/'+title,
+                                                unzip=False)
+        except:
+            notdownloaded = notdownloaded+1   
         
 
 def load_annotations():
