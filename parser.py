@@ -5,7 +5,13 @@ import json
 import pickle
 from datetime import datetime
 import sys
-import PyPDF2 as pypdf
+from io import StringIO
+from pdfminer.pdfdocument import PDFDocument
+from pdfminer.pdfpage import PDFPage
+from pdfminer.pdfparser import PDFParser
+from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
+from pdfminer.converter import TextConverter
+from pdfminer.layout import LAParams
 import requests
 
 from biothings import config
@@ -55,12 +61,24 @@ def convert_dois(doilist):
     r = requests.post("https://api.outbreak.info/resources/query/", params = {'q': doistring, 'scopes': 'doi', 'fields': '_id,name,url,doi'})
     if r.status_code == 200:
         rawresult = pandas.read_json(r.text)
-        cleanresult = rawresult.drop_duplicates(subset='_id',keep="first")
-        if len(doilist)>len(cleanresult):
-            missing = [x for x in doilist if x not in cleanresult['doi'].unique().tolist()]
+        if 'notfound' in rawresult.columns:
+            check = rawresult.loc[(rawresult['notfound']==1.0)|(rawresult['notfound']==True)]
+            if len(check)==len(doilist):
+                cleanresult = pandas.DataFrame(columns=['_id','name','url','doi'])
+                missing = doilist            
+            else:
+                no_dups = rawresult[rawresult['query']==rawresult['doi']]
+                cleanresult = no_dups[['_id','name','url','doi']].loc[~no_dups['_id'].isin(check['_id'].tolist())].copy()
+                missing = [x for x in doilist if x not in cleanresult['doi'].unique().tolist()]        
         else:
-            missing = None
-        cleanresult.drop(columns=['doi','_score','query'],inplace=True)
+            no_dups = rawresult[rawresult['query']==rawresult['doi']]
+            cleanresult = no_dups[['_id','name','url','doi']]
+            missing = []
+        cleanresult.drop('doi',axis=1,inplace=True)
+        
+    else:
+        cleanresult=[]
+        missing=[]
     return(cleanresult, missing)
 
 
@@ -70,54 +88,96 @@ def get_pmid_meta(pmidlist):
     r = requests.post("https://api.outbreak.info/resources/query/", params = {'q': pmidstring, 'scopes': '_id', 'fields': '_id,name,url'})
     if r.status_code == 200:
         rawresult = pandas.read_json(r.text)
-        cleanresult = rawresult[['_id','name','url']].loc[rawresult['_score']==1].copy()
-        cleanresult.drop_duplicates(subset='_id',keep="first", inplace=True)
-        if len(pmidlist)>len(cleanresult):
-            missing = [x for x in pmidlist if x not in cleanresult['_id'].unique().tolist()]
+        no_dups = rawresult[rawresult['query']==rawresult['_id']]
+        if 'notfound' in rawresult.columns:
+            check = rawresult.loc[(rawresult['notfound']==1.0)|(rawresult['notfound']==True)]
+            if len(check)==len(pmidlist):
+                cleanresult = pandas.DataFrame(columns=['_id','name','url'])
+                missing = pmidlist            
+            else:
+                cleanresult = no_dups[['_id','name','url']].loc[~no_dups['_id'].isin(check['_id'].tolist())].copy()
+                missing = [x for x in pmidlist if x not in cleanresult['_id'].unique().tolist()]
         else:
-            missing = None
-    return(cleanresult, missing)    
+            cleanresult = no_dups[['_id','name','url']]
+            missing = []
+        
+    else:
+        cleanresult=[]
+        missing=[]
+    return(cleanresult, missing)     
+
+
+#### Include method for poorly encoded pdfs
+def strip_ids_from_text(output_text):
+    pmidlist = []
+    doilist = []
+    check = output_text.split('\n')
+    doilines = [x for x in check if 'doi' in x.lower()]
+    if len(doilines)>0:
+        for doiline in doilines:
+            if '\t' in doiline:
+                doistart = doiline[doiline.find('doi'):]
+                doi = doistart[doistart.find('\t'):doistart.find('.\t')]
+                doilist.append(doi.strip())
+            else:
+                doistart = doiline[doiline.find('doi'):]
+                doi = doistart[doistart.find(' '):doistart.find('. ')]
+                doilist.append(doi.strip())
+    return(pmidlist,doilist)
+
+
+#### Method for parsing out ids from a url
+def parse_urls(eachurl,pmidlist,doilist):
+    if 'pubmed' in eachurl and '?' not in eachurl:
+        pmid = eachurl.replace("https://www.ncbi.nlm.nih.gov/pubmed/","").replace("https://pubmed.ncbi.nlm.nih.gov/","").rstrip("/")
+        if "#affiliation" in pmid:
+            trupmid = pmid.split("/")[0]
+            tmpid = 'pmid'+trupmid
+        else:
+            tmpid = 'pmid'+pmid
+        pmidlist.append(tmpid)
+    elif 'doi' in eachurl:
+        tenplace = eachurl.find('10.')
+        doi = eachurl[tenplace:]
+        doilist.append(doi)  
+    return(pmidlist,doilist)
 
 
 def parse_pdf(eachfile):
-    pdffile = open(REPORTS_PATH+eachfile,'rb')
-    pdf = pypdf.PdfFileReader(pdffile)
-    pages = pdf.getNumPages()
-    key = '/Annots'
-    uri = '/URI'
-    ank = '/A'
+    pdffile = open('data/reports/'+eachfile,'rb')
+    parser = PDFParser(pdffile)
+    doc = PDFDocument(parser)
     allurls = []
-    for page in range(pages):
-        pageSliced = pdf.getPage(page)
-        pageObject = pageSliced.getObject()
-        if key in pageObject:
-            ann = pageObject[key]
-            for a in ann:
-                u = a.getObject()
-                if ank in u:
-                    if uri in u[ank]:
-                        allurls.append(u[ank][uri])
     pmidlist = []
     doilist = []
-    for eachurl in allurls:
-        if 'pubmed' in eachurl and '?' not in eachurl:
-            pmid = eachurl.replace("https://www.ncbi.nlm.nih.gov/pubmed/","").replace("https://pubmed.ncbi.nlm.nih.gov/","").rstrip("/")
-            if "#affiliation" in pmid:
-                trupmid = pmid.split("/")[0]
-                tmpid = 'pmid'+trupmid
-            else:
-                tmpid = 'pmid'+pmid
-            pmidlist.append(tmpid)
-        elif 'doi' in eachurl:
-            tenplace = eachurl.find('10.')
-            doi = eachurl[tenplace:]
-            doilist.append(doi)
-        pmidlist = list(set(pmidlist))
-        doilist = list(set(doilist))
+    for page in PDFPage.create_pages(doc):
+        try: 
+            for annotation in page.annots:
+                annotationDict = annotation.resolve()
+                if "A" in annotationDict:
+                    uri = annotationDict["A"]["URI"].decode('UTF-8').replace(" ", "%20")
+                    allurls.append(uri)
+        except:
+            continue  
+    if len(allurls)>0:  
+        for eachurl in allurls:
+            pmidlist,doilist = parse_urls(eachurl,pmidlist,doilist)              
+    if len(allurls)==0: 
+        output_string = StringIO()
+        rsrcmgr = PDFResourceManager()
+        device = TextConverter(rsrcmgr, output_string, laparams=LAParams())
+        interpreter = PDFPageInterpreter(rsrcmgr, device)
+        for page in PDFPage.create_pages(doc):
+            interpreter.process_page(page)
+        output_text = output_string.getvalue()
+        pmidlist, doilist = strip_ids_from_text(output_text)         
+    pmidlist = list(set(pmidlist))
+    doilist = list(set(doilist))
+                   
     return(pmidlist,doilist)
 
+
 def merge_meta(pmidlist,doilist):
-    basedOndf, missing = None, None
     if len(doilist)>0:
         doianns,missing_dois = convert_dois(doilist)
         doicheck = True
@@ -181,6 +241,7 @@ def generate_report_meta(filelist):
     report_pmid_df = pandas.DataFrame(columns=['_id','name','identifier','url'])
     curatedByObject = generate_curator()
     author = generate_author()
+    badpdfs = []
     for eachfile in filelist:
         reportdate = eachfile[0:4]+'.'+eachfile[4:6]+'.'+eachfile[6:8]
         try:
@@ -194,8 +255,11 @@ def generate_report_meta(filelist):
         report_id = 'lst'+reportdate
         logger.warning(eachfile)
         pmidlist,doilist = parse_pdf(eachfile)
-        try:
+        if len(pmidlist)+len(doilist)==0:
+            badpdfs.append(eachfile)
+        else:
             basedOndf,missing = merge_meta(pmidlist,doilist)
+            basedOndf['@type']='Publication'
             reportlinkdf = basedOndf[['_id','url']]
             reportlinkdf['identifier']=report_id
             reportlinkdf['url']=reporturl
