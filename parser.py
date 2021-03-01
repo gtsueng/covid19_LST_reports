@@ -144,7 +144,7 @@ def parse_urls(eachurl,pmidlist,doilist):
 
 
 def parse_pdf(eachfile):
-    pdffile = open('data/reports/'+eachfile,'rb')
+    pdffile = open(os.path.join(REPORTS_PREFIX, eachfile),'rb')
     parser = PDFParser(pdffile)
     doc = PDFDocument(parser)
     allurls = []
@@ -315,7 +315,7 @@ def download_reports(reportdf):
         try:
             date_title = int(title[0:6])
             gdd.download_file_from_google_drive(file_id=eachid,
-                                                dest_path='data/reports/'+title,
+                                                dest_path=os.path.join(REPORTS_PREFIX, title),
                                                 unzip=False)
         except:
             notdownloaded = notdownloaded+1   
