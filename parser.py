@@ -276,8 +276,6 @@ def generate_report_meta(filelist):
                         "datePublished": datePublished.strftime("%Y-%m-%d"),"url": reporturl,"author":[author], 
                         "isBasedOn":basedOndf.to_dict('records')}
             yield(metadict)
-        except:
-            save_missing(list(report_id))
         
         
 ## This function identifies files uploaded after 2020.09.11 that have NOT yet been downloaded
