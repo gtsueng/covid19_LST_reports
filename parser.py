@@ -34,7 +34,7 @@ def generate_curator():
 def generate_author():
     authorObject = generate_curator()
     authorObject.pop('curationDate')
-    memberlist = read_csv(os.path.join(DATA_PREFIX, 'LST members.txt'),delimiter='\t',header=0,encoding='UTF-8')
+    memberlist = read_csv(os.path.join(DATA_PATH, 'LST members.txt'),delimiter='\t',header=0,encoding='UTF-8')
     memberlist.rename(columns={'affiliation':'affiliation list'}, inplace=True)
     memberlist['affiliation']='blank'
     for i in range(len(memberlist)):
@@ -315,7 +315,7 @@ def download_reports(reportdf):
         try:
             date_title = int(title[0:6])
             gdd.download_file_from_google_drive(file_id=eachid,
-                                                dest_path='data/reports/'+title,
+                                                dest_path=os.path.join(REPORTS_PATH, title),
                                                 unzip=False)
         except:
             notdownloaded = notdownloaded+1   
