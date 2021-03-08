@@ -3,3 +3,4 @@ pandas
 PyDrive2
 pdfminer-six==20201018
 requests
+pdfminer.six==20201018

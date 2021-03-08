@@ -34,7 +34,7 @@ def generate_curator():
 def generate_author():
     authorObject = generate_curator()
     authorObject.pop('curationDate')
-    memberlist = read_csv(os.path.join(DATA_PREFIX, 'LST members.txt'),delimiter='\t',header=0,encoding='UTF-8')
+    memberlist = read_csv(os.path.join(DATA_PATH, 'LST members.txt'),delimiter='\t',header=0,encoding='UTF-8')
     memberlist.rename(columns={'affiliation':'affiliation list'}, inplace=True)
     memberlist['affiliation']='blank'
     for i in range(len(memberlist)):
