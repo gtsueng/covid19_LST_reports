@@ -27,4 +27,4 @@ class LSTDumper(biothings.hub.dataload.dumper.DummyDumper):
     # override in subclass accordingly
     SRC_ROOT_FOLDER = os.path.join(DATA_ARCHIVE_ROOT, SRC_NAME)
     
-    SCHEDULE = "15 14 * * 1"  # mondays at 14:15UTC/7:15PT
+    SCHEDULE = None #"15 14 * * 1"  # mondays at 14:15UTC/7:15PT
