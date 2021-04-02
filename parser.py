@@ -17,10 +17,10 @@ import requests
 from biothings import config
 logger = config.logger
 
-DATA_PREFIX  = '/data/outbreak/plugins/covid_LST_reports'
+DATA_PREFIX  = '/opt/home/outbreak/outbreak.api/plugins/covid19_LST_reports/'
 RESULTS_PATH = os.path.join(DATA_PREFIX, 'results/')
 DATA_PATH    = os.path.join(DATA_PREFIX, 'data/')
-REPORTS_PATH = os.path.join(DATA_PREFIX, 'reports/')
+REPORTS_PATH = os.path.join(DATA_PATH, 'reports/')
 
 #### Create curatedBy Object
 def generate_curator():
