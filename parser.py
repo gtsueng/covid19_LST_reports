@@ -228,11 +228,19 @@ def save_missing(missing):
 def generate_report_url(datePublished):
     urlbase = "https://www.covid19lst.org/post/"
     urlend = "daily-covid-19-lst-report"
+    urlend2 = "weekly-covid-19-lst-report"
+    change_date = datetime.strptime("2021-04-22","%Y-%m-%d")
     is_windows = sys.platform.startswith('win')
-    if is_windows==True:
-        reporturl = urlbase+datePublished.strftime("%B").lower()+"-"+datePublished.strftime("%#d")+"-"+urlend
+    if datePublished > change_date:
+        if is_windows==True:
+            reporturl = urlbase+datePublished.strftime("%B").lower()+"-"+datePublished.strftime("%#d")+"-"+urlend2
+        else:
+            reporturl = urlbase+datePublished.strftime("%B").lower()+"-"+datePublished.strftime("%-d")+"-"+urlend2
     else:
-        reporturl = urlbase+datePublished.strftime("%B").lower()+"-"+datePublished.strftime("%-d")+"-"+urlend
+        if is_windows==True:
+            reporturl = urlbase+datePublished.strftime("%B").lower()+"-"+datePublished.strftime("%#d")+"-"+urlend
+        else:
+            reporturl = urlbase+datePublished.strftime("%B").lower()+"-"+datePublished.strftime("%-d")+"-"+urlend
     return(reporturl)
 
 
@@ -270,7 +278,7 @@ def generate_report_meta(filelist):
             save_missing(missing)
             abstract = generate_abstract(basedOndf['_id'].unique().tolist())
             metadict = {"@context": {"schema": "http://schema.org/", "outbreak": "https://discovery.biothings.io/view/outbreak/"}, 
-                        "@type": "Publication", "journalName": "COVID-19 LST Daily Summary Reports", "journalNameAbbreviation": "covid19LST", 
+                        "@type": "Publication", "journalName": "COVID-19 LST Summary Reports", "journalNameAbbreviation": "covid19LST", 
                         "publicationType": "Review", "license":"(CC BY-NC-SA 4.0) (http://creativecommons.org/licenses/by-nc-sa/4.0/)",
                         "_id":report_id,"curatedBy": curatedByObject,"abstract": abstract, "name": name, 
                         "datePublished": datePublished.strftime("%Y-%m-%d"),"url": reporturl,"author":[author], 
@@ -322,8 +330,8 @@ def download_reports(reportdf):
         
 
 def load_annotations():
-    reportdf = check_google()
-    download_reports(reportdf)
+    #reportdf = check_google()
+    #download_reports(reportdf)
     dumpdir = REPORTS_PATH
     filelist = os.listdir(dumpdir)
     logger.warning(filelist)
