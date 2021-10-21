@@ -11,3 +11,5 @@ Additionally, this parser uses the PyDrive2 library to leverage the googledrive 
 Note that the jupyter notebook contains more detailed comments and serves as the documentation for this code. If it causes issues with running the code withing the BioThings ecosystem, delete the 'documentation' folder before running.
 
 Note that the COVID-19 LST provides 2 types of data: Their reports (which are deserving of their own entries as review articles) and their annotations (to be appended to publication entries).  This repo is for the reports, which are updated almost daily (weekends are less steady). 
+
+Note that the branch "active-update" is the data plugin which can be used for parsing COVID-19 LST reports as they get uploaded. That said, COVID-19 LST have stopped updating since July 2021, so this branch will serve as an archive of the main branch, while the main branch will be edited to load the archived parsed data
