@@ -54,7 +54,6 @@ def generate_abstract(publist):
     abstract = "Analytical reviews on the level of evidence presented in publications. This report specifically covers the following publications: "+ separator.join(publist)
     return(abstract)
 
-
 ### Batch convert DOIs
 def convert_dois(doilist):
     doistring = '"' + '","'.join(doilist) + '"'
@@ -81,6 +80,8 @@ def convert_dois(doilist):
         missing=[]
     return(cleanresult, missing)
 
+### Convert a single doi
+##"https://api.outbreak.info/resources/query?q=doi:"+doi
 
 ### Batch fetch pmid meta
 def get_pmid_meta(pmidlist):
@@ -245,23 +246,30 @@ def generate_report_url(datePublished):
 
 
 
+def get_url_df():
+    urldf = read_csv('results/urls.txt',delimiter='\t',header=0,index_col=0)
+    return(urldf)
+
+
+def fix_url(urldf,name):
+    match = urldf.loc[urldf['name']==name]
+    url = match.iloc[0]["working_url"]
+    return(url)
+
+
 def generate_report_meta(filelist):
+    urldf = get_url_df()
     report_pmid_df = pandas.DataFrame(columns=['_id','name','identifier','url'])
     curatedByObject = generate_curator()
     author = generate_author()
     badpdfs = []
     for eachfile in filelist:
         reportdate = eachfile[0:4]+'.'+eachfile[4:6]+'.'+eachfile[6:8]
-        try:
-            datePublished = datetime(int(eachfile[0:4]), int(eachfile[4:6]), int(eachfile[6:8]))
-        except:
-            logger.warning(f"could not find date published for {eachfile}")
-            continue
-
+        datePublished = datetime.fromisoformat(eachfile[0:4]+'-'+eachfile[4:6]+'-'+eachfile[6:8])
         name = "Covid-19 LST Report "+reportdate
-        reporturl = generate_report_url(datePublished)
+        #reporturl = generate_report_url(datePublished)
+        reporturl = fix_url(urldf,name)
         report_id = 'lst'+reportdate
-        logger.warning(eachfile)
         pmidlist,doilist = parse_pdf(eachfile)
         if len(pmidlist)+len(doilist)==0:
             badpdfs.append(eachfile)
@@ -274,7 +282,7 @@ def generate_report_meta(filelist):
             reportlinkdf['name']=name
             report_pmid_df = pandas.concat(([report_pmid_df,reportlinkdf]),ignore_index=True)
             report_pmid_df.drop_duplicates(keep='first',inplace=True)
-            report_pmid_df.to_csv(os.path.join(DATA_PREFIX, 'report_pmid_df.txt'),sep='\t',header=True)
+            report_pmid_df.to_csv('data/report_pmid_df.txt',sep='\t',header=True)
             save_missing(missing)
             abstract = generate_abstract(basedOndf['_id'].unique().tolist())
             metadict = {"@context": {"schema": "http://schema.org/", "outbreak": "https://discovery.biothings.io/view/outbreak/"}, 
