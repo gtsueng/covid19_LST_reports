@@ -1,20 +1,14 @@
 import json
-import requests
+import os
 
 from biothings import config
+from config import DATA_ARCHIVE_ROOT
 logger = config.logger
 
-def load_filenames():
-    r = requests.get('https://raw.githubusercontent.com/outbreak-info/covid19_LST_report_data/main/reportlist.txt')
-    reportlist=r.text.split('\n')
-    formattedlist = [x.replace(" ","%20") for x in reportlist]
-    return(formattedlist)
-
 def load_annotations()
-    basejsonurl = 'https://raw.githubusercontent.com/outbreak-info/covid19_LST_report_data/main/json/'
-    formattedlist = load_filenames()
-    for eachjson in formattedlist:
-        fileurl = basejsonurl+eachjson
-        rawdoc = requests.get(fileurl)
-        doc = json.loads(rawdoc.text)
-        yield doc
+    filenames = os.listdir(SRC_ROOT_FOLDER)
+    for eachjson in filenames:
+        filepath = os.path.join(SRC_ROOT_FOLDER,eachjson)
+        with open(filepath,'r') as rawdoc
+            doc = json.loads(rawdoc)
+            yield doc
