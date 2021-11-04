@@ -28,7 +28,7 @@ class LSTUploader(biothings.hub.dataload.uploader.BaseSourceUploader):
             },
             "code":{
                 "branch": "master",
-                "repo": "https://github.com/gtsueng/covid19_LST_reports.git"
+                "repo": "https://github.com/outbreak-info/covid19_LST_reports.git"
             },
             "url": "https://www.covid19lst.org/",
             "license": "https://creativecommons.org/licenses/by-nc-sa/4.0/"
