@@ -10,7 +10,7 @@ def load_filenames():
     formattedlist = [x.replace(" ","%20") for x in reportlist]
     return(formattedlist)
 
-def load_annotations()
+def load_annotations():
     basejsonurl = 'https://raw.githubusercontent.com/outbreak-info/covid19_LST_report_data/main/json/'
     formattedlist = load_filenames()
     for eachjson in formattedlist:
