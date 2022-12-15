@@ -1,4 +1,5 @@
 ## COVID-19 Literature Surveillance Team parser for Outbreak.info
+[![DOI](https://zenodo.org/badge/297455031.svg)](https://zenodo.org/badge/latestdoi/297455031)
 
 This is the parser for the COVID-19 Literature Surveillance Team reports.  The COVID-19 Literature Surveillance Team is a group of MDs, PhDs, Medical Students and Residents who summarize and evaluate recent publications on COVID-19. They use the Bottom Line Up Front (BLUF) standard for their summaries and the 2011 Oxford level of evidence rubric for evaluating level of evidence.
 
